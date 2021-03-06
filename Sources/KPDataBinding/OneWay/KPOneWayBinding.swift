@@ -23,14 +23,13 @@ public class KPOneWayBinding<Model>: KPBinding<Model> {
             
             view[keyPath: vKeyPath] = model[keyPath: mKeyPath]
             
-            print("<- : view#\(view.id) <-", model[keyPath: mKeyPath])
             return true
         }
     }
     
     public init<V: UIView, Value>(_ mKeyPath: KeyPath<Model, Value>,
                                   _ view: V,
-                                  _ adapter: @escaping (V, Value) -> ()) {
+                                  _ updateView: @escaping (V, Value) -> ()) {
         super.init()
         
         id = view.id
@@ -39,9 +38,8 @@ public class KPOneWayBinding<Model>: KPBinding<Model> {
         updateViewWithModel = { [weak view] model in
             guard let view = view else { return false }
             
-            adapter(view, model[keyPath: mKeyPath])
+            updateView(view, model[keyPath: mKeyPath])
             
-            print("<~ : view#\(view.id) <~", model[keyPath: mKeyPath])
             return true
         }
     }

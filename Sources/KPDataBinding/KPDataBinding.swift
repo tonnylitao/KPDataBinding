@@ -79,9 +79,9 @@ extension KPDataBinding {
     @discardableResult
     public func twoWayBind<V: KPTwoWayView, Value>(_ mKeyPath: WritableKeyPath<Model, Value>,
                                                    _ view: V,
-                                                   formatter: @escaping (V, Model) -> Value,
-                                                   render: @escaping (V, Value) -> ()) -> Self {
-        let binding = KPTwoWayBinding(mKeyPath, view, V.twoWayEvent, render, formatter)
+                                                   updateView: @escaping (V, Value) -> (),
+                                                   updateModel: @escaping (Model, V) -> ()) -> Self {
+        let binding = KPTwoWayBinding(mKeyPath, view, V.twoWayEvent, updateView, updateModel)
         return bind(binding)
     }
     
