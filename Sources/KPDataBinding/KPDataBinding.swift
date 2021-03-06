@@ -47,8 +47,6 @@ public class KPDataBinding<Model> {
             .forEach {
                 _ = $0.updateViewWithModel(model)
             }
-        
-        print(model as Any)
     }
 }
 
@@ -64,8 +62,8 @@ extension KPDataBinding {
     @discardableResult
     public func oneWayBind<V: UIView, Value>(_ mKeyPath: KeyPath<Model, Value>,
                                              _ view: V,
-                                             _ render: @escaping (V, Value) -> ()) -> Self {
-        let binding = KPOneWayBinding(mKeyPath, view, render)
+                                             _ updateView: @escaping (V, Value) -> ()) -> Self {
+        let binding = KPOneWayBinding(mKeyPath, view, updateView)
         return bind(binding)
     }
     
