@@ -14,13 +14,13 @@ public class KPOneWayBinding<Model> {
     
     public init<V: UIView, Value>(_ mKeyPath: KeyPath<Model, Value>,
                                   _ view: V,
-                                  updateView: @escaping (V, Value) -> ()) {
+                                  updateView: @escaping (V, Value, Model) -> ()) {
         modelKeyPath = mKeyPath
         
         self.updateView = { [weak view] model in
             guard let view = view else { return false }
             
-            updateView(view, model[keyPath: mKeyPath])
+            updateView(view, model[keyPath: mKeyPath], model)
             
             return true
         }
@@ -29,7 +29,7 @@ public class KPOneWayBinding<Model> {
     public convenience init<V: KPOneWayView>(_ mKeyPath: KeyPath<Model, V.Value>,
                                              _ view: V,
                                              _ vKeyPath: ReferenceWritableKeyPath<V, V.Value>) where V.View == V {
-        self.init(mKeyPath, view, updateView: { view, value in
+        self.init(mKeyPath, view, updateView: { view, value, model in
             view[keyPath: V.keyPath] = value
         })
     }

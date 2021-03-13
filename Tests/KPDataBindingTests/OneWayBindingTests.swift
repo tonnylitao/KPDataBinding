@@ -32,7 +32,7 @@ struct Address {
 
 extension User {
     static var random: User {
-
+        
         return User(
             groupName: "Group \(Int.random(in: 1...100))",
             name: String.random,
@@ -58,13 +58,13 @@ extension String {
 class OneWayBindingTests: XCTestCase {
     
     var binding: KPDataBinding<User>!
-
+    
     override func setUpWithError() throws {
         binding = KPDataBinding(User())
     }
-
+    
     override func tearDownWithError() throws {}
-
+    
     func testInitial() throws {
         // Arrange
         let lbl = UILabel()
@@ -79,13 +79,13 @@ class OneWayBindingTests: XCTestCase {
         
         // Assert
         XCTAssertNotNil(binding.model)
-
+        
         XCTAssertNil(binding.model.name)
         XCTAssertNil(lbl.text)
-
+        
         XCTAssertNil(binding.model.email)
         XCTAssertEqual(field.text, UITextField().text)
-
+        
         XCTAssertFalse(binding.model.likeKiwi)
         XCTAssertFalse(btn.isSelected)
     }
@@ -113,25 +113,25 @@ class OneWayBindingTests: XCTestCase {
         // Action
         binding.bind(KPOneWayBinding(\.name, lbl, \.text))
         binding.bind(KPOneWayBinding(\.email, field, \.text))
-
+        
         let text = String.random
-
+        
         binding.update(\.name, with: text)
-
+        
         // Assert
         XCTAssertEqual(binding.model.name, text)
         XCTAssertEqual(lbl.text, text)
-
+        
         // Action & Assert
         binding.update(\.name, with: nil)
         XCTAssertNil(binding.model.name)
         XCTAssertNil(lbl.text)
-
+        
         // Action & Assert
         binding.update(\.email, with: text)
         XCTAssertEqual(binding.model.email, text)
         XCTAssertEqual(field.text, text)
-
+        
         // Action & Assert
         binding.update(\.email, with: nil)
         XCTAssertNil(binding.model.email)
@@ -225,7 +225,9 @@ class OneWayBindingTests: XCTestCase {
         // Action
         
         binding.bind(
-            KPOneWayBinding(\.name, lbl, updateView:{ $0.text = ($1 ?? "") + text })
+            KPOneWayBinding(\.name, lbl, updateView: { view, value, _ in
+                view.text = (value ?? "") + text
+            })
         )
         binding.model = .random
         
@@ -256,8 +258,12 @@ class OneWayBindingTests: XCTestCase {
         
         // Action
         binding.bind(
-            KPOneWayBinding(\.name, lbl, updateView:{ $0.text = ($1 ?? "") + text1 }),
-            KPOneWayBinding(\User.name, field, updateView:{ $0.text = ($1 ?? "") + text2 })
+            KPOneWayBinding(\.name, lbl, updateView: { view, value, _ in
+                view.text = (value ?? "") + text1
+            }),
+            KPOneWayBinding(\User.name, field, updateView: { view, value, _ in
+                view.text = (value ?? "") + text2
+            })
         )
         binding.model = .random
         
@@ -285,7 +291,9 @@ class OneWayBindingTests: XCTestCase {
         
         // Action
         binding.bind(
-            KPOneWayBinding(\.name, lbl, updateView: { $0.layer.cornerRadius = CGFloat(Float($1 ?? "0") ?? 0) })
+            KPOneWayBinding(\.name, lbl, updateView: { view, value, model in
+                view.layer.cornerRadius = CGFloat(Float(value ?? "0") ?? 0)
+            })
         )
         
         // Assert
@@ -314,6 +322,6 @@ class OneWayBindingTests: XCTestCase {
         ("testMultileFormat", testMultileFormat),
         ("testOtherFormat", testOtherFormat)
     ]
-
+    
 }
 

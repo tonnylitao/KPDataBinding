@@ -60,7 +60,7 @@ public class KPDataBinding<Model> {
 
 extension KPDataBinding {
     /*
-     binding.oneWayBind(\.intProperty, textField) { view, value in
+     binding.oneWayBind(\.intProperty, textField) { view, value, _ in
         view.text = "\(value)"
      }
      */
@@ -68,7 +68,7 @@ extension KPDataBinding {
     @discardableResult
     public func oneWayBind<V: UIView, Value>(_ mKeyPath: KeyPath<Model, Value>,
                                              _ view: V,
-                                             updateView: @escaping (V, Value) -> ()) -> Self {
+                                             updateView: @escaping (V, Value, Model) -> ()) -> Self {
         return bind(
             KPOneWayBinding(
                 mKeyPath, view, updateView: updateView
@@ -82,7 +82,7 @@ extension KPDataBinding {
      binding.bind(
         \.name => nameField,
         \.email => emailField,
-        KPOneWayBinding(\.intProperty, textField, updateView: { $0.text = \($1) })
+        KPOneWayBinding(\.intProperty, textField, updateView: { view, value in view.text = "\(value)" })
      )
      */
     
@@ -103,7 +103,7 @@ extension KPDataBinding {
 
 extension KPDataBinding {
     /*
-     binding.twoWayBind(\.intProperty, textField, updateView: { view, value in
+     binding.twoWayBind(\.intProperty, textField, updateView: { view, value, _ in
         view.text = "\(value)"
      }, updateModel: { model, view in
         model.intProperty = Int(view.text) ?? 0

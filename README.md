@@ -1,30 +1,31 @@
 # KPDataBinding
 DataBinding with Swift KeyPath
+[https://github.com/tonnylitao/KPDataBinding](https://github.com/tonnylitao/KPDataBinding)
 
 ### One-way data binding
 ```swift
 struct User {
-    var aString:        String?
-    var aButtonTitle:   String?
+    var title:  String?
+    var name:   String?
 }
 
-let userBinding = KPDataBinding<User>()
+let binding = KPDataBinding<User>()
 
-userBinding.bind([
-    \.aString 		=> uiLabel,
-    \.aButtonTitle 	=> uiButton,
-])
+binding.bind(
+    \.title    => uiButton,
+    \.name     => uiLabel
+)
 
-userBinding.update(\.aString, with: "A new text")
+binding.update(\.name, with: "Tonny")
 
-//userBinding.model.aString == "A new text"
-//uiLabel.text == "A new text"
+//binding.model.name == "Tonny"
+//binding.name == "Tonny"
 
 
-userBinding.update(\.aButtonTitle, with: "A new title")
+binding.update(\.title, with: "Mr.")
 
-//userBinding.model.aButtonTitle == "A new title"
-//uiButton.title(for: .normal) == "A new title"
+//binding.model.title == "Mr."
+//uiButton.title(for: .normal) == "Mr."
 ```
 ##### Customised one-way data binding
 
@@ -32,17 +33,17 @@ userBinding.update(\.aButtonTitle, with: "A new title")
 
 ```swift
 struct User {
-    var aInt: Int
+    var age: Int
 }
 
-userBinding.oneWayBind(\.aInt, toLabel, { view, value in
+binding.oneWayBind(\.age, ageLabel) { view, value, _ in
     view.text = "Your Age: \(value)"
-})
+}
 
-userBinding.update(\.aInt, with: 1)
+binding.update(\.age, with: 10)
 
-//userBinding.model.aInt == 1
-//uiLabel.text == "Your Age: 1"
+//binding.model.age == 10
+//ageLabel.text == "Your Age: 10"
 ```
 
 ### Two-way data binding
@@ -57,7 +58,7 @@ struct User {
     var aDouble:    Double
 }
 
-userBinding.bind([
+binding.bind([
     \.aString     <=> uiTextField,
     \.isOn        <=> uiSwitcher,
     \.isSelected  <=> uiButton,
@@ -67,24 +68,24 @@ userBinding.bind([
 
 //view value and model value will be equal 
 
-//userBinding.model.isOn == uiSwitcher.isOn
+//binding.model.isOn == uiSwitcher.isOn
 
-//userBinding.model.isSelected == uiButton.isSelected
+//binding.model.isSelected == uiButton.isSelected
 
-//userBinding.model.aFloat == uiSlider.value
+//binding.model.aFloat == uiSlider.value
 
-//userBinding.model.aDouble == uiSteper.value
+//binding.model.aDouble == uiSteper.value
 ```
 
 Note: This text of UITextField is @"" by default. https://developer.apple.com/documentation/uikit/uitextfield/1619635-text
 
 ```
-userBinding.update(\.aString, with: nil)
+binding.update(\.aString, with: nil)
 //userViewModel.model.aString == nil
 //uiTextField.text == ""
 
-userBinding.update(\.aString, with: "A new String")
-//userBinding.model.aString == "A new String"
+binding.update(\.aString, with: "A new String")
+//binding.model.aString == "A new String"
 //uiTextField.text == "A new String"
 ```
 
@@ -94,19 +95,19 @@ userBinding.update(\.aString, with: "A new String")
 * render a customised data in view
 
 ```swift
-userBinding.twoWayBind(\.age, ageSteper, 
-	updateView: { (view, value) in
+binding.twoWayBind(\.age, ageSteper, 
+	updateView: { view, value, _ in
 		view.value = Double(value)
 	}, 
-	updateModel: { (model, view) in
+	updateModel: { model, view in
 		model.age = Int(view.value)
 	}
 )
 
 //uiSteper's value changed to 3.0
-//userBinding.model.aInt == Int(3.0)
+//binding.model.aInt == Int(3.0)
 
-//userBinding.model.aInt == 1
+//binding.model.aInt == 1
 //uiSteper.value == Double(1)
 
 ```
@@ -116,13 +117,13 @@ userBinding.twoWayBind(\.age, ageSteper,
 Always update model through ViewModel, and the binding view will be updated automatically.
 
 ```
-userBinding.update(\User.name, with: "A new Name")
+binding.update(\User.name, with: "A new Name")
 ```
 
 ### Unbind
 
 ```
-userBinding.unbind(\User.name)
+binding.unbind(\User.name)
 ```
 
 ### How KeyPath works in Data Binding?
