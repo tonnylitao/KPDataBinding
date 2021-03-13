@@ -12,21 +12,21 @@ import Foundation
 class OneWayOperatorTests: XCTestCase {
     
     var binding: KPDataBinding<User>!
-
+    
     override func setUpWithError() throws {
         binding = KPDataBinding(User())
     }
-
+    
     override func tearDownWithError() throws {}
-
+    
     func testInitial() throws {
         let lbl = UILabel()
         let field = UITextField()
         let btn = UIButton()
         
-        binding.oneWayBind(\.name, lbl)
-            .oneWayBind(\.email, field)
-            .oneWayBind(\.likeKiwi, btn)
+        binding.bind(\.name => lbl)
+            .bind(\.email => field)
+            .bind(\.likeKiwi => btn)
         
         XCTAssertNotNil(binding.model)
         
@@ -45,8 +45,8 @@ class OneWayOperatorTests: XCTestCase {
         let field = UITextField()
         
         
-        binding.oneWayBind(\.name, lbl)
-            .oneWayBind(\.email, field)
+        binding.bind(\.name => lbl)
+            .bind(\.email => field)
         binding.model = .random
         
         XCTAssertEqual(lbl.text, binding.model.name)
@@ -57,8 +57,8 @@ class OneWayOperatorTests: XCTestCase {
         let lbl = UILabel()
         let field = UITextField()
         
-        binding.oneWayBind(\.name, lbl)
-            .oneWayBind(\.email, field)
+        binding.bind(\.name => lbl)
+            .bind(\.email => field)
         
         let text = String.random
         
@@ -123,9 +123,11 @@ class OneWayOperatorTests: XCTestCase {
     func testManyFieldToOneView() throws {
         let lbl = UILabel()
         
-        binding.bind(\.name => lbl)
-            .bind(\.email => lbl)
-            .bind(\.groupName => lbl)
+        binding.bind(
+            \.name => lbl,
+            \.email => lbl,
+            \.groupName => lbl
+        )
         binding.model = .random
         
         XCTAssertEqual(lbl.text, binding.model.groupName)

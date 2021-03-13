@@ -8,67 +8,40 @@
 import Foundation
 import UIKit
 
-public class KPTwoWayBinding<Model>: KPBinding<Model> {
+typealias ViewTag = Int
+
+public class KPTwoWayBinding<Model> {
+    var modelKeyPath: AnyKeyPath!
+    var updateView: ((Model) -> (Bool))!
+    var updateModel: ((inout Model) -> (Bool))!
     
+    var tag: ViewTag!
     var addTargetWithActionForEvent: ((Any?, Selector) -> ())!
     var removeTargetWithActionForEvent: ((Any?, Selector) -> ())!
-    
-    var viewUpdateModel:             ((inout Model) -> (Bool))!
-    
-    public init<V: KPTwoWayView>(_ mKeyPath: WritableKeyPath<Model, V.Value>,
-                                 _ view: V,
-                                 _ vKeyPath: ReferenceWritableKeyPath<V, V.Value>,
-                                 _ event: UIControl.Event) {
-        super.init()
-        
-        viewUpdateModel = { [weak view] in
-            guard let view = view else { return false }
-            
-            $0[keyPath: mKeyPath] = view[keyPath: vKeyPath]
-            
-            return true
-        }
-        
-        addTargetWithActionForEvent = { [weak view] in
-            guard let view = view else { return }
-            
-            view.addTarget($0, action: $1, for: event)
-        }
-        
-        removeTargetWithActionForEvent = { [weak view] in
-            guard let view = view else { return }
-
-            view.removeTarget($0, action: $1, for: event)
-        }
-        
-        id = view.id
-        modelKeyPath = mKeyPath
-        
-        updateViewWithModel = { [weak view] in
-            guard let view = view else { return false }
-            
-            view[keyPath: vKeyPath] = $0[keyPath: mKeyPath]
-            
-            return true
-        }
-        
-    }
     
     public init<V: UIControl, Value>(_ mKeyPath: WritableKeyPath<Model, Value>,
                                      _ view: V,
                                      _ event: UIControl.Event,
-                                     _ updateView: @escaping (V, Value) -> (),
-                                     _ updateModel: @escaping (Model, V) -> ()) {
-        super.init()
+                                     updateView: @escaping (V, Value, Model) -> (),
+                                     updateModel: @escaping (inout Model, V) -> ()) {
         
-        viewUpdateModel = { [weak view] in
+        modelKeyPath = mKeyPath
+        self.updateModel = { [weak view] in
             guard let view = view else { return false }
             
-            updateModel($0, view)
+            updateModel(&$0, view)
+            
+            return true
+        }
+        self.updateView = { [weak view] in
+            guard let view = view else { return false }
+            
+            updateView(view, $0[keyPath: mKeyPath], $0)
             
             return true
         }
         
+        tag = view.tag
         addTargetWithActionForEvent = { [weak view] in
             guard let view = view else { return }
             
@@ -77,28 +50,37 @@ public class KPTwoWayBinding<Model>: KPBinding<Model> {
         
         removeTargetWithActionForEvent = { [weak view] in
             guard let view = view else { return }
-
+            
             view.removeTarget($0, action: $1, for: event)
         }
-        
-        id = view.id
-        modelKeyPath = mKeyPath
-        
-        updateViewWithModel = { [weak view] in
-            guard let view = view else { return false }
-            
-            updateView(view, $0[keyPath: mKeyPath])
-            
-            return true
-        }
-        
     }
+    
+    public convenience init<V: KPTwoWayView>(_ mKeyPath: WritableKeyPath<Model, V.Value>,
+                                             _ view: V,
+                                             _ vKeyPath: ReferenceWritableKeyPath<V, V.Value>,
+                                             _ event: UIControl.Event) {
+        self.init(mKeyPath, view, event,
+                  updateView: { view, value, _ in
+                    view[keyPath: vKeyPath] = value
+                  },
+                  updateModel: { model, view in
+                    model[keyPath: mKeyPath] = view[keyPath: vKeyPath]
+                  })
+    }
+    
 }
 
 
 infix operator <=>
 
 public extension KPTwoWayView {
+    
+    /*
+     let bindings = [
+        \User.name <=> nameField,
+        \User.email <=> emailField
+     ]
+     */
     
     static func <=> <Model>(mKeyPath: WritableKeyPath<Model, Self.Value>, view: Self) -> KPTwoWayBinding<Model> {
         KPTwoWayBinding(mKeyPath, view, Self.keyPath, Self.twoWayEvent)

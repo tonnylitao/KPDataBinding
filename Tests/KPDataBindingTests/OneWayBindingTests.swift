@@ -157,11 +157,11 @@ class OneWayBindingTests: XCTestCase {
         let view3 = UITextField()
         
         // Action
-        binding.bind([
+        binding.bind(
             KPOneWayBinding(\.name, view1, \.text),
             KPOneWayBinding(\.name, view2, \.text),
             KPOneWayBinding(\.name, view3, \.text)
-        ])
+        )
         binding.model = .random
         
         // Assert
@@ -194,11 +194,11 @@ class OneWayBindingTests: XCTestCase {
         let lbl = UILabel()
         
         // Action
-        binding.bind( [
+        binding.bind(
             KPOneWayBinding(\.name, lbl, \.text),
             KPOneWayBinding(\.email, lbl, \.text),
             KPOneWayBinding(\.groupName, lbl, \.text)
-        ])
+        )
         binding.model = .random
         
         // Assert
@@ -225,7 +225,7 @@ class OneWayBindingTests: XCTestCase {
         // Action
         
         binding.bind(
-            KPOneWayBinding(\.name, lbl, { $0.text = ($1 ?? "") + text })
+            KPOneWayBinding(\.name, lbl, updateView:{ $0.text = ($1 ?? "") + text })
         )
         binding.model = .random
         
@@ -255,10 +255,10 @@ class OneWayBindingTests: XCTestCase {
         let field = UITextField()
         
         // Action
-        binding.bind([
-            KPOneWayBinding(\.name, lbl, { $0.text = ($1 ?? "") + text1 }),
-            KPOneWayBinding(\User.name, field, { $0.text = ($1 ?? "") + text2 })
-        ])
+        binding.bind(
+            KPOneWayBinding(\.name, lbl, updateView:{ $0.text = ($1 ?? "") + text1 }),
+            KPOneWayBinding(\User.name, field, updateView:{ $0.text = ($1 ?? "") + text2 })
+        )
         binding.model = .random
         
         // Assert
@@ -284,9 +284,9 @@ class OneWayBindingTests: XCTestCase {
         let lbl = UILabel()
         
         // Action
-        binding.bind([
-            KPOneWayBinding(\.name, lbl, { $0.layer.cornerRadius = CGFloat(Float($1 ?? "0") ?? 0) })
-        ])
+        binding.bind(
+            KPOneWayBinding(\.name, lbl, updateView: { $0.layer.cornerRadius = CGFloat(Float($1 ?? "0") ?? 0) })
+        )
         
         // Assert
         XCTAssertEqual(lbl.layer.cornerRadius, 0)

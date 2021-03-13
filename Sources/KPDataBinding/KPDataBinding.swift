@@ -9,12 +9,17 @@ import UIKit
 
 public class KPDataBinding<Model> {
     
-    lazy private var _bindings = [KPBinding<Model>]()
+    lazy private var _oneWayBindings = [KPOneWayBinding<Model>]()
+    lazy private var _twoWayBindings = [KPTwoWayBinding<Model>]()
     
     public var model: Model! {
         didSet {
-            //if view was removed, then remove the binding
-            _bindings = _bindings.filter { $0.updateViewWithModel(model) }
+            _oneWayBindings.forEach {
+                _ = $0.updateView(model)
+            }
+            _twoWayBindings.forEach {
+                _ = $0.updateView(model)
+            }
         }
     }
     
@@ -23,88 +28,124 @@ public class KPDataBinding<Model> {
     }
     
     @objc private func viewChanged(control: UIControl) {
-        (control as? KPTwoWayEventReceiver)?.handleEvent()
+        guard let eventReceiver = control as? KPTwoWayEventReceiver else {
+            assert(false)
+            return
+        }
+        
+        eventReceiver.handleEvent()
         
         /*
          two way binding first
          */
         var affectedKeyPaths = Set<AnyKeyPath>()
         
-        _bindings
-            .filter { $0.id == control.id }
-            .compactMap { $0 as? KPTwoWayBinding }
+        _twoWayBindings
+            .filter { $0.tag == control.tag }
             .forEach {
-                _ = $0.viewUpdateModel(&model)
+                _ = $0.updateModel(&model)
                 affectedKeyPaths.insert($0.modelKeyPath)
             }
         
         /*
          one way binding later
          */
-        _bindings
+        _oneWayBindings
             .filter { affectedKeyPaths.contains($0.modelKeyPath) }
-            .compactMap { $0 as? KPOneWayBinding }
             .forEach {
-                _ = $0.updateViewWithModel(model)
+                _ = $0.updateView(model)
             }
     }
 }
 
 extension KPDataBinding {
-    
-    @discardableResult
-    public func oneWayBind<V: KPOneWayView>(_ mKeyPath: KeyPath<Model, V.Value>,
-                                            _ view: V) -> Self where V.View == V {
-        let binding = KPOneWayBinding(mKeyPath, view, V.keyPath)
-        return bind(binding)
-    }
+    /*
+     binding.oneWayBind(\.intProperty, textField) { view, value in
+        view.text = "\(value)"
+     }
+     */
     
     @discardableResult
     public func oneWayBind<V: UIView, Value>(_ mKeyPath: KeyPath<Model, Value>,
                                              _ view: V,
-                                             _ updateView: @escaping (V, Value) -> ()) -> Self {
-        let binding = KPOneWayBinding(mKeyPath, view, updateView)
-        return bind(binding)
+                                             updateView: @escaping (V, Value) -> ()) -> Self {
+        return bind(
+            KPOneWayBinding(
+                mKeyPath, view, updateView: updateView
+            )
+        )
     }
     
-    @discardableResult
-    public func twoWayBind<V: KPTwoWayView>(_ mKeyPath: WritableKeyPath<Model, V.Value>,
-                                            _ view: V) -> Self {
-        let binding = KPTwoWayBinding(mKeyPath, view, V.keyPath, V.twoWayEvent)
-        return bind(binding)
-    }
+    /*
+     binding.bind(\.name => nameField)
+     
+     binding.bind(
+        \.name => nameField,
+        \.email => emailField,
+        KPOneWayBinding(\.intProperty, textField, updateView: { $0.text = \($1) })
+     )
+     */
     
     @discardableResult
-    public func twoWayBind<V: KPTwoWayView, Value>(_ mKeyPath: WritableKeyPath<Model, Value>,
-                                                   _ view: V,
-                                                   updateView: @escaping (V, Value) -> (),
-                                                   updateModel: @escaping (Model, V) -> ()) -> Self {
-        let binding = KPTwoWayBinding(mKeyPath, view, V.twoWayEvent, updateView, updateModel)
-        return bind(binding)
-    }
-    
-    
-    @discardableResult
-    public func bind(_ binding: KPBinding<Model>) -> Self {
-        if let m = model {
-            _ = binding.updateViewWithModel(m)
-        }
-        
-        _bindings.append(binding)
-        
-        if let twoWayBinding = binding as? KPTwoWayBinding<Model> {
-            assert(binding.id > 0)
+    public func bind(_ bindings: KPOneWayBinding<Model>...) -> Self {
+        bindings.forEach { binding in
+            if let m = model {
+                _ = binding.updateView(m)
+            }
             
-            twoWayBinding.addTargetWithActionForEvent(self, #selector(viewChanged))
+            _oneWayBindings.append(binding)
         }
         
         return self
     }
     
+}
+
+extension KPDataBinding {
+    /*
+     binding.twoWayBind(\.intProperty, textField, updateView: { view, value in
+        view.text = "\(value)"
+     }, updateModel: { model, view in
+        model.intProperty = Int(view.text) ?? 0
+     })
+     */
     @discardableResult
-    public func bind(_ bindings: [KPBinding<Model>]) -> Self {
-        bindings.forEach {
-            bind($0)
+    public func twoWayBind<V: KPTwoWayView, Value>(_ mKeyPath: WritableKeyPath<Model, Value>,
+                                                   _ view: V,
+                                                   updateView: @escaping (V, Value, Model) -> (),
+                                                   updateModel: @escaping (inout Model, V) -> ()) -> Self {
+        return bind(
+            KPTwoWayBinding(
+                mKeyPath, view, V.twoWayEvent, updateView: updateView, updateModel: updateModel
+            )
+        )
+    }
+    
+    /*
+    binding.bind(\.name => nameField)
+    
+    binding.bind(
+       \.name <=> nameField,
+       \.email <=> emailField,
+       KPTwoWayBinding(\.intProperty, textField, updateView: { view, value, _ in
+          view.text = "\(value)"
+       }, updateModel: { model, view in
+          model.intProperty = Int(view.text) ?? 0
+       })
+    )
+    */
+    @discardableResult
+    public func bind(_ bindings: KPTwoWayBinding<Model>...) -> Self {
+        bindings.forEach { binding in
+            assert(binding.tag > 0)
+            
+            if let m = model {
+                _ = binding.updateView(m)
+            }
+            
+            _twoWayBindings.append(binding)
+            
+            binding.addTargetWithActionForEvent(self, #selector(viewChanged))
         }
         
         return self
@@ -118,20 +159,21 @@ extension KPDataBinding {
     public func update<Value>(_ keyPath: WritableKeyPath<Model, Value>, with value: Value) -> Bool {
         model[keyPath: keyPath] = value
         
-        let updated = _bindings.filter({ $0.modelKeyPath == keyPath && $0.updateViewWithModel(model) })
+        let oneWayUpdated = _oneWayBindings.filter({ $0.modelKeyPath == keyPath && $0.updateView(model) })
+        let twoWayUpdated = _twoWayBindings.filter({ $0.modelKeyPath == keyPath && $0.updateView(model) })
         
-        return !updated.isEmpty
+        return !oneWayUpdated.isEmpty || !twoWayUpdated.isEmpty
     }
 }
 
 extension KPDataBinding {
     
     public func unbind<Value>(_ keyPath: KeyPath<Model, Value>) {
-        _bindings
-            .filter { $0.modelKeyPath == keyPath }
-            .compactMap { $0 as? KPTwoWayBinding }
-            .forEach { $0.removeTargetWithActionForEvent(self, #selector(viewChanged)) }
+        _oneWayBindings.removeAll { $0.modelKeyPath == keyPath }
         
-        _bindings.removeAll { $0.modelKeyPath == keyPath }
+        _twoWayBindings
+            .filter { $0.modelKeyPath == keyPath }
+            .forEach { $0.removeTargetWithActionForEvent(self, #selector(viewChanged)) }
+        _twoWayBindings.removeAll { $0.modelKeyPath == keyPath }
     }
 }
