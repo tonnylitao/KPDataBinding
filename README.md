@@ -5,27 +5,19 @@ DataBinding with Swift KeyPath
 ### One-way data binding
 ```swift
 struct User {
-    var title:  String?
     var name:   String?
 }
 
 let binding = KPDataBinding<User>()
 
 binding.bind(
-    \.title    => uiButton,
-    \.name     => uiLabel
+    \.name => uiLabel
 )
 
 binding.update(\.name, with: "Tonny")
 
 //binding.model.name == "Tonny"
-//binding.name == "Tonny"
-
-
-binding.update(\.title, with: "Mr.")
-
-//binding.model.title == "Mr."
-//uiButton.title(for: .normal) == "Mr."
+//uiLabel.text == "Tonny"
 ```
 ##### Customised one-way data binding
 
@@ -89,10 +81,7 @@ binding.update(\.aString, with: "A new String")
 //uiTextField.text == "A new String"
 ```
 
-##### Format and type cast in two-way data binding
-
-* data formatted before when update model 
-* render a customised data in view
+##### customised update logic for view and model in two-way data binding
 
 ```swift
 binding.twoWayBind(\.age, ageSteper, 
@@ -104,11 +93,11 @@ binding.twoWayBind(\.age, ageSteper,
 	}
 )
 
-//uiSteper's value changed to 3.0
-//binding.model.aInt == Int(3.0)
+//when ageSteper's value changed to 3.0
+//binding.model.age == 3
 
-//binding.model.aInt == 1
-//uiSteper.value == Double(1)
+//when age changed to 4
+//uiSteper.value == 4.0
 
 ```
 
@@ -126,7 +115,7 @@ binding.update(\User.name, with: "A new Name")
 binding.unbind(\User.name)
 ```
 
-### How KeyPath works in Data Binding?
+### How does KPDataBinding work?
 
 ```swift
 model[keyPath: \User.name] = "Tonny"       //update model
@@ -137,7 +126,6 @@ view[keyPath: \UITextField.text] = model[keyPath: \User.name]  //update view fro
 
 
 view.addTarget(self, #selector(viewChanged), for: event)
-
 func viewChanged(view: UITextField) {
     model[keyPath: \User.name] = view[keyPath: \UITextField.text]  //update model from view
 }
