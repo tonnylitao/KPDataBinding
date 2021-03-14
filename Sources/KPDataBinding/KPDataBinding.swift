@@ -27,7 +27,7 @@ public class KPDataBinding<Model> {
         self.model = model
     }
     
-    @objc private func viewChanged(control: UIControl) {
+    @objc func viewChanged(control: UIControl) {
         guard let eventReceiver = control as? KPTwoWayEventReceiver else {
             assert(false)
             return
@@ -70,9 +70,7 @@ extension KPDataBinding {
                                              _ view: V,
                                              updateView: @escaping (V, Value, Model) -> ()) -> Self {
         return bind(
-            KPOneWayBinding(
-                mKeyPath, view, updateView: updateView
-            )
+            KPOneWayBinding(mKeyPath, view, updateView: updateView)
         )
     }
     

@@ -1,55 +1,47 @@
 //
-//  OneWayOperatorTests.swift
+//  TwoWayBindingTests.swift
 //  
 //
 //  Created by Tonny on 6/03/21.
 //
 
 import XCTest
-import Foundation
 @testable import KPDataBinding
 
-class OneWayOperatorTests: XCTestCase {
+class TwoWayBindingTests: XCTestCase {
+    
     var binding: KPDataBinding<User>!
     
-    var lbl: UILabel!
     var field: UITextField!
     var btn: UIButton!
-    var imgView: UIImageView!
     var switcher: UISwitch!
     var slider: UISlider!
     var stepper: UIStepper!
     
     override func setUpWithError() throws {
-        lbl = UILabel()
-        field = UITextField()
-        btn = UIButton()
-        imgView = UIImageView()
-        switcher = UISwitch()
-        slider = UISlider()
-        stepper = UIStepper()
+        field = UITextField(); field.tag = 1
+        btn = UIButton(); btn.tag = 2
+        switcher = UISwitch(); switcher.tag = 3
+        slider = UISlider(); slider.tag = 4
+        stepper = UIStepper(); stepper.tag = 5
         
         binding = KPDataBinding(User())
         XCTAssertNotNil(binding.model)
     }
     
     override func tearDownWithError() throws {}
-    
+
     func testInitial() throws {
         binding.bind(
-            \.info => lbl,
-            \.email => field,
-            \.likesTravel => btn,
-            \.avatar => imgView,
-            \.isOnline => switcher,
-            \.activity => slider,
-            \.step => stepper
+            KPTwoWayBinding(\.email, field),
+            KPTwoWayBinding(\.likesTravel, btn),
+            KPTwoWayBinding(\.isOnline, switcher),
+            KPTwoWayBinding(\.activity, slider),
+            KPTwoWayBinding(\.step, stepper)
         )
         
-        XCTAssertNil(lbl.text)
         XCTAssertEqual(field.text, "")
         XCTAssertFalse(btn.isSelected)
-        XCTAssertNil(imgView.image)
         XCTAssertEqual(switcher.isOn, false)
         XCTAssertEqual(slider.value, 0)
         XCTAssertEqual(stepper.value, 0)
@@ -59,45 +51,28 @@ class OneWayOperatorTests: XCTestCase {
         let model = User.random
         binding.model = model
         binding.bind(
-            \.info => lbl,
-            \.email => field,
-            \.likesTravel => btn,
-            \.avatar => imgView,
-            \.isOnline => switcher,
-            \.activity => slider,
-            \.step => stepper
+            KPTwoWayBinding(\.email, field),
+            KPTwoWayBinding(\.likesTravel, btn),
+            KPTwoWayBinding(\.isOnline, switcher),
+            KPTwoWayBinding(\.activity, slider),
+            KPTwoWayBinding(\.step, stepper)
         )
         
-        XCTAssertEqual(lbl.text, binding.model.info)
         XCTAssertEqual(field.text, binding.model.email)
         XCTAssertEqual(btn.isSelected, binding.model.likesTravel)
-        XCTAssertEqual(imgView.image, binding.model.avatar)
         XCTAssertEqual(switcher.isOn, binding.model.isOnline)
         XCTAssertEqual(slider.value, binding.model.activity)
         XCTAssertEqual(stepper.value, binding.model.step)
     }
-    
+
     func testUpdate() throws {
         binding.bind(
-            \.info => lbl,
-            \.email => field,
-            \.likesTravel => btn,
-            \.avatar => imgView,
-            \.isOnline => switcher,
-            \.activity => slider,
-            \.step => stepper
+            KPTwoWayBinding(\.email, field),
+            KPTwoWayBinding(\.likesTravel, btn),
+            KPTwoWayBinding(\.isOnline, switcher),
+            KPTwoWayBinding(\.activity, slider),
+            KPTwoWayBinding(\.step, stepper)
         )
-        
-        //
-        var info: String? = "new info"
-        binding.update(\.info, with: info)
-        XCTAssertEqual(binding.model.info, info)
-        XCTAssertEqual(lbl.text, info)
-        
-        info = nil
-        binding.update(\.info, with: info)
-        XCTAssertEqual(binding.model.info, nil)
-        XCTAssertEqual(lbl.text, nil)
         
         //
         var email: String? = "test@gmail.com"
@@ -144,16 +119,14 @@ class OneWayOperatorTests: XCTestCase {
         XCTAssertEqual(binding.model.step, step)
         XCTAssertEqual(stepper.value, step)
     }
-    
+
     func testUnbind() throws {
         binding.bind(
-            \.info => lbl,
-            \.email => field,
-            \.likesTravel => btn,
-            \.avatar => imgView,
-            \.isOnline => switcher,
-            \.activity => slider,
-            \.step => stepper
+            KPTwoWayBinding(\.email, field),
+            KPTwoWayBinding(\.likesTravel, btn),
+            KPTwoWayBinding(\.isOnline, switcher),
+            KPTwoWayBinding(\.activity, slider),
+            KPTwoWayBinding(\.step, stepper)
         )
         
         
@@ -180,54 +153,124 @@ class OneWayOperatorTests: XCTestCase {
     }
     
     func testOneStateToManyView() throws {
-        let lbl1 = UILabel()
-        let lbl2 = UILabel()
-        let field3 = UITextField()
-        
+        let field1 = UITextField(); field1.tag = 1
+        let field2 = UITextField(); field2.tag = 2
+        let field3 = UITextField(); field3.tag = 3
+
         binding.bind(
-            \.info => lbl1,
-            \.info => lbl2,
-            \.info => field3
+            KPTwoWayBinding(\.info, field1),
+            KPTwoWayBinding(\.info, field2),
+            KPTwoWayBinding(\.info, field3)
         )
         
         //
         binding.update(\.info, with: "a new info")
-        XCTAssertEqual(lbl1.text, binding.model.info)
-        XCTAssertEqual(lbl2.text, binding.model.info)
+        XCTAssertEqual(field1.text, binding.model.info)
+        XCTAssertEqual(field2.text, binding.model.info)
         XCTAssertEqual(field3.text, binding.model.info)
-        
+
         //
         binding.update(\.info, with: nil)
-        XCTAssertEqual(lbl1.text, nil)
-        XCTAssertEqual(lbl2.text, nil)
+        XCTAssertEqual(field1.text, "")
+        XCTAssertEqual(field2.text, "")
         XCTAssertEqual(field3.text, "")
     }
-    
+
     func testManyStateToOneView() throws {
         binding.bind(
-            \.info => lbl,
-            \.email => lbl
+            KPTwoWayBinding(\.info, field),
+            KPTwoWayBinding(\.email, field)
         )
         binding.model = .random
-        
+
         //last binding
-        XCTAssertEqual(lbl.text, binding.model.email)
-        
+        XCTAssertEqual(field.text, binding.model.email)
+
         let newInfo = "a new Info"
         binding.update(\.info, with: newInfo)
-        XCTAssertEqual(lbl.text, newInfo)
-        
+        XCTAssertEqual(field.text, newInfo)
+
         let newEmail = "newEmail@test.com"
         binding.update(\.email, with: newEmail)
-        XCTAssertEqual(lbl.text, newEmail)
+        XCTAssertEqual(field.text, newEmail)
     }
     
+    func testUpdateView() throws {
+        binding.bind(
+            KPTwoWayBinding(\.amount, field, .editingChanged, updateView: { view, value, _ in
+                view.text = "$\(value?.description ?? "")"
+            }, updateModel: { model, view in
+                var text = view.text
+                text?.removeFirst()
+                model.amount = Decimal(string: text ?? "")
+            })
+        )
+        binding.model = .random
+        XCTAssertEqual(field.text, "$\(binding.model.amount!.description)")
+
+        
+        let amount: Decimal = 100
+        binding.update(\.amount, with: amount)
+        XCTAssertEqual(binding.model.amount, amount)
+        XCTAssertEqual(field.text, "$100")
+
+
+        binding.update(\.amount, with: nil)
+        XCTAssertNil(binding.model.amount)
+        XCTAssertEqual(field.text, "$")
+        
+        field.text = "$200"
+        binding.viewChanged(control: field)
+        XCTAssertEqual(binding.model.amount, 200)
+    }
+    
+    func testUpdateMultileViews() throws {
+        let nzdField = UITextField(); nzdField.tag = 1
+        let cnyField = UITextField(); cnyField.tag = 2
+        
+        binding.bind(
+            KPTwoWayBinding(\.amount, nzdField, .editingChanged, updateView: { view, value, _ in
+                view.text = "$\(value?.description ?? "")"
+            }, updateModel: { model, view in
+                var text = view.text
+                text?.removeFirst()
+                model.amount = Decimal(string: text ?? "")
+            }),
+            KPTwoWayBinding(\.amount, cnyField, .editingChanged, updateView: { view, value, _ in
+                view.text = "¥\(((value ?? 0) * 4.5).description )"
+            }, updateModel: { model, view in
+                var text = view.text
+                text?.removeFirst()
+                model.amount = (Decimal(string: text ?? "") ?? 0) / 4.5
+            })
+        )
+
+        
+        binding.update(\.amount, with: 100)
+        XCTAssertEqual(nzdField.text, "$100")
+        XCTAssertEqual(cnyField.text, "¥450")
+        
+        nzdField.text = "$1000"
+        binding.viewChanged(control: nzdField)
+        XCTAssertEqual(binding.model.amount, 1000)
+        XCTAssertEqual(cnyField.text, "¥4500")
+        
+        cnyField.text = "$45000"
+        binding.viewChanged(control: cnyField)
+        XCTAssertEqual(binding.model.amount, 10000)
+        XCTAssertEqual(nzdField.text, "$10000")
+    }
+
     static var allTests = [
         ("testInitial", testInitial),
         ("testInitialWithData", testInitialWithData),
         ("testUpdate", testUpdate),
         ("testUnbind", testUnbind),
         ("testOneStateToManyView", testOneStateToManyView),
-        ("testManyStateToOneView", testManyStateToOneView)
+        ("testManyStateToOneView", testManyStateToOneView),
+        ("testUpdateView", testUpdateView),
+        ("testUpdateMultileViews", testUpdateMultileViews)
     ]
+
 }
+

@@ -27,8 +27,7 @@ public class KPOneWayBinding<Model> {
     }
     
     public convenience init<V: KPOneWayView>(_ mKeyPath: KeyPath<Model, V.Value>,
-                                             _ view: V,
-                                             _ vKeyPath: ReferenceWritableKeyPath<V, V.Value>) where V.View == V {
+                                             _ view: V) where V.View == V {
         self.init(mKeyPath, view, updateView: { view, value, model in
             view[keyPath: V.keyPath] = value
         })
@@ -49,6 +48,6 @@ public extension KPSelfOneWayView {
      */
     
     static func => <Model>(mKeyPath: WritableKeyPath<Model, Self.Value>, view: Self) -> KPOneWayBinding<Model> {
-        KPOneWayBinding(mKeyPath, view, Self.keyPath)
+        KPOneWayBinding(mKeyPath, view)
     }
 }

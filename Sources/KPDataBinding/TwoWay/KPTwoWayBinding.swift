@@ -56,15 +56,14 @@ public class KPTwoWayBinding<Model> {
     }
     
     public convenience init<V: KPTwoWayView>(_ mKeyPath: WritableKeyPath<Model, V.Value>,
-                                             _ view: V,
-                                             _ vKeyPath: ReferenceWritableKeyPath<V, V.Value>,
-                                             _ event: UIControl.Event) {
-        self.init(mKeyPath, view, event,
+                                             _ view: V) {
+        
+        self.init(mKeyPath, view, V.twoWayEvent,
                   updateView: { view, value, _ in
-                    view[keyPath: vKeyPath] = value
+                    view[keyPath: V.keyPath] = value
                   },
                   updateModel: { model, view in
-                    model[keyPath: mKeyPath] = view[keyPath: vKeyPath]
+                    model[keyPath: mKeyPath] = view[keyPath: V.keyPath]
                   })
     }
     
@@ -83,6 +82,6 @@ public extension KPTwoWayView {
      */
     
     static func <=> <Model>(mKeyPath: WritableKeyPath<Model, Self.Value>, view: Self) -> KPTwoWayBinding<Model> {
-        KPTwoWayBinding(mKeyPath, view, Self.keyPath, Self.twoWayEvent)
+        KPTwoWayBinding(mKeyPath, view)
     }
 }
